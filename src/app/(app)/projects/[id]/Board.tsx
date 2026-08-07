@@ -43,7 +43,7 @@ export function Board({ projectId }: { projectId: string }) {
   function handleDrop(status: TaskStatus) {
     if (!draggingId) return;
 
-    const task = tasks.find((candidate) => candidate.id === draggingId);
+    const task = tasks?.find((candidate) => candidate.id === draggingId);
     setDraggingId(null);
 
     if (!task || task.status === status) return;
