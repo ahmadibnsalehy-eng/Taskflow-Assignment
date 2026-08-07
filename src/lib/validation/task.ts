@@ -1,5 +1,5 @@
 import { z } from 'zod';
-
+import { TASK_PRIORITIES, TASK_STATUSES } from '@/types/database';
 /* ===========================================================================
  * TODO 4 — the task schema
  *
@@ -40,8 +40,21 @@ import { z } from 'zod';
  * =========================================================================== */
 
 export const createTaskSchema = z.object({
-  // TODO 4: replace this placeholder with the four real fields.
-  title: z.string(),
+  title: z
+    .string()
+    .trim()
+    .min(3, 'Title must be at least 3 characters.')
+    .max(120, 'Title must be at most 120 characters.'),
+
+  description: z
+    .string()
+    .max(2000, 'Description must be at most 2000 characters.')
+    .optional()
+    .or(z.literal('')),
+
+  status: z.enum(TASK_STATUSES),
+
+  priority: z.enum(TASK_PRIORITIES),
 });
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;

@@ -15,6 +15,15 @@ import { Board } from './Board';
  */
 type PageProps = { params: Promise<{ id: string }> };
 
+export async function generateMetadata({ params }: PageProps) {
+  const { id } = await params;
+
+  const supabase = await createClient();
+  const project = await fetchProject(supabase, id);
+
+  return { title: project?.name ?? 'Project' };
+}
+
 /* ===========================================================================
  * TODO 8 — the three Next.js conventions
  *

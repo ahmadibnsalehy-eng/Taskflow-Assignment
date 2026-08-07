@@ -1,6 +1,9 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { fetchTasks } from '@/lib/api/tasks';
+import { taskKeys } from '@/lib/query-keys';
+import { createClient } from '@/lib/supabase/client';
 
 import type { Task } from '@/types/database';
 
@@ -29,9 +32,11 @@ import type { Task } from '@/types/database';
 
 export function useTasks(projectId: string) {
   return useQuery<Task[]>({
-    queryKey: ['tasks', 'todo-2', projectId],
+    queryKey: taskKeys.list(projectId),
     queryFn: async () => {
-      throw new Error('TODO 2: implement useTasks in src/hooks/useTasks.ts');
+      const supabase = createClient();
+      return fetchTasks(supabase, projectId);
     },
   });
 }
+ 

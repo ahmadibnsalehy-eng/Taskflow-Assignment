@@ -1,7 +1,10 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
+import { createTask } from '@/lib/api/tasks';
+import { taskKeys } from '@/lib/query-keys';
+import { createClient } from '@/lib/supabase/client';
 import type { CreateTaskInput } from '@/lib/validation/task';
 import type { Task } from '@/types/database';
 
@@ -42,11 +45,17 @@ import type { Task } from '@/types/database';
  * =========================================================================== */
 
 export function useCreateTask(projectId: string, userId: string) {
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+
   return useMutation<Task, Error, CreateTaskInput>({
-    mutationFn: async () => {
-      throw new Error(
-        `TODO 6: implement useCreateTask (project ${projectId}, user ${userId})`,
-      );
+    mutationFn: (input) => createTask(supabase, projectId, userId, input),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: taskKeys.list(projectId),
+      });
     },
   });
 }
+

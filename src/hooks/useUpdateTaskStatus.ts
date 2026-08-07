@@ -1,7 +1,9 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
-
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { updateTaskStatus } from '@/lib/api/tasks';
+import { taskKeys } from '@/lib/query-keys';
+import { createClient } from '@/lib/supabase/client';
 import type { Task, TaskStatus } from '@/types/database';
 
 /* ===========================================================================
@@ -69,9 +71,41 @@ import type { Task, TaskStatus } from '@/types/database';
  * =========================================================================== */
 
 export function useUpdateTaskStatus(projectId: string) {
-  return useMutation<Task, Error, { id: string; status: TaskStatus }>({
-    mutationFn: async () => {
-      throw new Error(`TODO 7: implement useUpdateTaskStatus (project ${projectId})`);
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+  const queryKey = taskKeys.list(projectId);
+
+  return useMutation<
+    Task,
+    Error,
+    { id: string; status: TaskStatus },
+    { previous?: Task[] }
+  >({
+    mutationFn: ({ id, status }) =>
+      updateTaskStatus(supabase, id, status),
+
+    onMutate: async ({ id, status }) => {
+      await queryClient.cancelQueries({ queryKey });
+
+      const previous = queryClient.getQueryData<Task[]>(queryKey);
+
+      queryClient.setQueryData<Task[]>(queryKey, (old) =>
+        old?.map((task) =>
+          task.id === id ? { ...task, status } : task,
+        ),
+      );
+
+      return { previous };
+    },
+
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKey, context.previous);
+      }
+    },
+
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 }
